@@ -25,7 +25,7 @@ if "dday_data" not in st.session_state:
 
 quote_text, quote_author = st.session_state.today_quote
 
-# 상단 레이아웃: 왼쪽(상단 중앙 D-Day/제목), 오른쪽(명언)
+# 상단 레이아웃: 왼쪽(D-Day 영역), 오른쪽(명언)
 col_main, col_quote = st.columns([2, 1])
 
 with col_quote:
@@ -37,50 +37,48 @@ with col_quote:
     )
 
 with col_main:
-    st.title("To-Do & D-Day 앱")
+    # 1. D-Day 표시 및 설정 영역
+    if st.session_state.dday_data is None:
+        st.subheader("D-Day 설정")
+        dday_title = st.text_input("목표 이름", key="dday_title_input")
+        target_date = st.date_input("목표 날짜", value=date.today())
 
-# 1. D-Day 표시 및 설정 영역
-if st.session_state.dday_data is None:
-    st.subheader("D-Day 설정")
-    dday_title = st.text_input("목표 이름", key="dday_title_input")
-    target_date = st.date_input("목표 날짜", value=date.today())
-
-    if st.button("D-Day 설정"):
-        if dday_title:
-            st.session_state.dday_data = {
-                "title": dday_title,
-                "target_date": target_date
-            }
-            st.rerun()
-        else:
-            st.warning("목표 이름을 입력하세요.")
-else:
-    # D-Day 계산
-    title = st.session_state.dday_data["title"]
-    target_date = st.session_state.dday_data["target_date"]
-    today = date.today()
-    diff = (target_date - today).days
-
-    if diff == 0:
-        dday_str = "D-DAY"
-    elif diff > 0:
-        dday_str = f"D-{diff:02d}"
+        if st.button("D-Day 설정"):
+            if dday_title:
+                st.session_state.dday_data = {
+                    "title": dday_title,
+                    "target_date": target_date
+                }
+                st.rerun()
+            else:
+                st.warning("목표 이름을 입력하세요.")
     else:
-        dday_str = f"D+{abs(diff):02d}"
+        # D-Day 계산
+        title = st.session_state.dday_data["title"]
+        target_date = st.session_state.dday_data["target_date"]
+        today = date.today()
+        diff = (target_date - today).days
 
-    # 화면 중앙 상단에 큰 글씨로 D-Day 표시
-    st.markdown(
-        f"""
-        <div style='text-align: center; margin: 10px 0 20px 0;'>
-            <span style='font-size: 1.2em; color: #555;'>{title}</span><br>
-            <span style='font-size: 3em; font-weight: bold; color: #E74C3C;'>{dday_str}</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    if st.button("D-Day 재설정", key="reset_dday"):
-        st.session_state.dday_data = None
-        st.rerun()
+        if diff == 0:
+            dday_str = "D-DAY"
+        elif diff > 0:
+            dday_str = f"D-{diff:02d}"
+        else:
+            dday_str = f"D+{abs(diff):02d}"
+
+        # 화면 중앙 상단에 큰 글씨로 D-Day 표시
+        st.markdown(
+            f"""
+            <div style='text-align: center; margin: 10px 0 20px 0;'>
+                <span style='font-size: 1.2em; color: #555;'>{title}</span><br>
+                <span style='font-size: 3em; font-weight: bold; color: #E74C3C;'>{dday_str}</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button("D-Day 재설정", key="reset_dday"):
+            st.session_state.dday_data = None
+            st.rerun()
 
 st.divider()
 
