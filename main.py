@@ -8,14 +8,12 @@ st.set_page_config(page_title="To-Do & D-Day", layout="centered")
 # 외부 API에서 무작위 명언 가져오는 함수
 def get_random_quote():
     try:
-        # API 호출 (타임아웃 3초 설정)
         response = requests.get("https://api.quotable.io/random", timeout=3)
         if response.status_code == 200:
             data = response.json()
             return data["content"], data["author"]
     except Exception:
         pass
-    # 네트워크 오류 등 API 호출 실패 시 기본 명언 반환
     return "삶이 있는 한 희망은 있다.", "키케로"
 
 # 새로고침/재접속 시마다 새로운 명언 불러오기
@@ -60,7 +58,7 @@ st.divider()
 # 2. To-Do 리스트
 st.header("To-Do 리스트")
 
-# 세션 상태 초기화
+# 세션 상태 초기화 (dict 형태로 text와 done 상태 저장)
 if "todos" not in st.session_state:
     st.session_state.todos = []
 
@@ -69,16 +67,24 @@ new_todo = st.text_input("할 일 입력", key="todo_input")
 
 if st.button("할 일 추가"):
     if new_todo:
-        st.session_state.todos.append(new_todo)
+        st.session_state.todos.append({"text": new_todo, "done": False})
         st.rerun()
 
-# 할 일 목록 및 삭제 기능
+# 할 일 목록 및 취소선/완료 기능
 if st.session_state.todos:
-    for i, todo in enumerate(st.session_state.todos):
+    for i, item in enumerate(st.session_state.todos):
         col1, col2 = st.columns([4, 1])
-        col1.write(f"- {todo}")
-        if col2.button("삭제", key=f"del_{i}"):
-            st.session_state.todos.pop(i)
+        
+        # 완료 여부에 따른 취소선 적용
+        if item["done"]:
+            col1.markdown(f"~{item['text']}~")
+        else:
+            col1.write(f"- {item['text']}")
+            
+        # 완료 토글 버튼
+        btn_label = "취소" if item["done"] else "완료"
+        if col2.button(btn_label, key=f"toggle_{i}"):
+            st.session_state.todos[i]["done"] = not st.session_state.todos[i]["done"]
             st.rerun()
 else:
     st.caption("등록된 할 일이 없습니다.")
