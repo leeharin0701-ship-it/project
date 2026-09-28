@@ -1,75 +1,45 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>To-Do & D-Day</title>
-  <style>
-    body { font-family: sans-serif; max-width: 500px; margin: 30px auto; padding: 20px; }
-    section { border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    ul { list-style: none; padding: 0; }
-    li { display: flex; justify-content: space-between; margin-bottom: 8px; }
-  </style>
-</head>
-<body>
+from datetime import date
+import streamlit as st
 
-  <!-- D-Day 계산기 -->
-  <section>
-    <h2>D-Day 계산기</h2>
-    <input type="text" id="ddayTitle" placeholder="목표 이름">
-    <input type="date" id="ddayDate">
-    <button onclick="addDday()">추가</button>
-    <ul id="ddayList"></ul>
-  </section>
+st.title("To-Do & D-Day 앱")
 
-  <!-- To-Do 리스트 -->
-  <section>
-    <h2>To-Do 리스트</h2>
-    <input type="text" id="todoInput" placeholder="할 일 입력">
-    <button onclick="addTodo()">추가</button>
-    <ul id="todoList"></ul>
-  </section>
+# 1. D-Day 계산기
+st.header("D-Day 계산기")
+dday_title = st.text_input("목표 이름")
+target_date = st.date_input("목표 날짜", value=date.today())
 
-  <script>
-    // D-Day 추가 기능
-    function addDday() {
-      const title = document.getElementById('ddayTitle').value;
-      const dateVal = document.getElementById('ddayDate').value;
-      if (!title || !dateVal) return;
+if st.button("D-Day 추가"):
+    if dday_title:
+        today = date.today()
+        diff = (target_date - today).days
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const targetDate = new Date(dateVal);
-      targetDate.setHours(0, 0, 0, 0);
+        if diff == 0:
+            result = "D-Day"
+        elif diff > 0:
+            result = f"D-{diff}"
+        else:
+            result = f"D+{abs(diff)}"
 
-      const diffTime = targetDate - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        st.success(f"{dday_title}: {result}")
 
-      let ddayText = '';
-      if (diffDays === 0) ddayText = 'D-Day';
-      else if (diffDays > 0) ddayText = `D-${diffDays}`;
-      else ddayText = `D+${Math.abs(diffDays)}`;
+st.divider()
 
-      const li = document.createElement('li');
-      li.innerHTML = `<span>${title}</span> <strong>${ddayText}</strong>`;
-      document.getElementById('ddayList').appendChild(li);
+# 2. To-Do 리스트
+st.header("To-Do 리스트")
 
-      document.getElementById('ddayTitle').value = '';
-      document.getElementById('ddayDate').value = '';
-    }
+if "todos" not in st.session_state:
+    st.session_state.todos = []
 
-    // To-Do 추가 기능
-    function addTodo() {
-      const input = document.getElementById('todoInput');
-      const text = input.value.trim();
-      if (!text) return;
+new_todo = st.text_input("할 일 입력")
+if st.button("To-Do 추가"):
+    if new_todo:
+        st.session_state.todos.append(new_todo)
+        st.rerun()
 
-      const li = document.createElement('li');
-      li.innerHTML = `<span>${text}</span> <button onclick="this.parentElement.remove()">삭제</button>`;
-      document.getElementById('todoList').appendChild(li);
-
-      input.value = '';
-    }
-  </script>
-
-</body>
-</html>
+# 할 일 목록 출력
+for i, todo in enumerate(st.session_state.todos):
+    col1, col2 = st.columns([4, 1])
+    col1.write(f"- {todo}")
+    if col2.button("삭제", key=f"del_{i}"):
+        st.session_state.todos.pop(i)
+        st.rerun()
