@@ -1,24 +1,25 @@
 from datetime import date
-import random
+import requests
 import streamlit as st
 
 # 페이지 기본 설정
 st.set_page_config(page_title="To-Do & D-Day", layout="centered")
 
-# 명언 데이터
-quotes = [
-    ("삶이 있는 한 희망은 있다.", "키케로"),
-    ("산다는것 그것은 격렬한 유희이다.", "아인슈타인"),
-    ("하루에 3시간을 걸으면 7년 후에 지구를 한 바퀴 돌 수 있다.", "사무엘 존슨"),
-    ("언제나 현재에 집중할수 있다면 행복할것이다.", "파울로 코엘료"),
-    ("진정으로 웃으려면 자신의 고통을 가지고 놀 줄 알아야 한다.", "찰리 채플린"),
-]
+# 외부 API에서 무작위 명언 가져오는 함수
+def get_random_quote():
+    try:
+        # API 호출 (타임아웃 3초 설정)
+        response = requests.get("https://api.quotable.io/random", timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            return data["content"], data["author"]
+    except Exception:
+        pass
+    # 네트워크 오류 등 API 호출 실패 시 기본 명언 반환
+    return "삶이 있는 한 희망은 있다.", "키케로"
 
-# 재접속 시마다 랜덤 선택
-if "today_quote" not in st.session_state:
-    st.session_state.today_quote = random.choice(quotes)
-
-quote_text, quote_author = st.session_state.today_quote
+# 새로고침/재접속 시마다 새로운 명언 불러오기
+quote_text, quote_author = get_random_quote()
 
 # 오른쪽 상단 명언 표시
 col_title, col_quote = st.columns([1, 1])
