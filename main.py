@@ -25,10 +25,11 @@ if "dday_data" not in st.session_state:
 
 quote_text, quote_author = st.session_state.today_quote
 
-# 상단 레이아웃: 왼쪽(D-Day 영역), 오른쪽(명언)
-col_main, col_quote = st.columns([2, 1])
+# 상단 레이아웃: 왼쪽(D-Day 영역), 오른쪽(명언 영역)
+col_left, col_right = st.columns([1, 1])
 
-with col_quote:
+# 오른쪽 상단: 명언
+with col_right:
     st.markdown(
         f"<div style='text-align: right; color: gray; font-size: 0.85em;'>"
         f"<i>\"{quote_text}\"</i><br><b>- {quote_author} -</b>"
@@ -36,8 +37,8 @@ with col_quote:
         unsafe_allow_html=True
     )
 
-with col_main:
-    # 1. D-Day 표시 및 설정 영역
+# 왼쪽 상단: D-Day 표시 및 설정
+with col_left:
     if st.session_state.dday_data is None:
         st.subheader("D-Day 설정")
         dday_title = st.text_input("목표 이름", key="dday_title_input")
@@ -66,12 +67,12 @@ with col_main:
         else:
             dday_str = f"D+{abs(diff):02d}"
 
-        # 화면 중앙 상단에 큰 글씨로 D-Day 표시
+        # 왼쪽 상단 배치
         st.markdown(
             f"""
-            <div style='text-align: center; margin: 10px 0 20px 0;'>
-                <span style='font-size: 1.2em; color: #555;'>{title}</span><br>
-                <span style='font-size: 3em; font-weight: bold; color: #E74C3C;'>{dday_str}</span>
+            <div style='text-align: left; margin-bottom: 10px;'>
+                <span style='font-size: 1.1em; color: #555;'>{title}</span><br>
+                <span style='font-size: 2.5em; font-weight: bold; color: #E74C3C;'>{dday_str}</span>
             </div>
             """,
             unsafe_allow_html=True
