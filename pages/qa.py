@@ -34,9 +34,9 @@ def query_huggingface(prompt_text, token):
         "Content-Type": "application/json"
     }
     
-    # 안정적으로 제공되는 Llama-3.2-3B-Instruct 모델로 변경
+    # 무료 인퍼런스로 넓게 지원되는 Qwen2.5-72B-Instruct 사용
     payload = {
-        "model": "meta-llama/Llama-3.2-3B-Instruct",
+        "model": "Qwen/Qwen2.5-72B-Instruct",
         "messages": [
             {
                 "role": "system",
