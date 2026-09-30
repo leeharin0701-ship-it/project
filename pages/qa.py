@@ -5,8 +5,11 @@ st.set_page_config(page_title="과목별 AI 질문하기", layout="centered")
 
 st.title("🤖 과목별 AI 질문하기")
 
-# 사이드바에 Hugging Face 토큰 입력
-hf_token = st.sidebar.text_input("Hugging Face Token 입력 (hf_...)", type="password")
+# Streamlit Secrets에서 토큰 자동 불러오기
+try:
+    hf_token = st.secrets["HF_TOKEN"]
+except Exception:
+    hf_token = None
 
 # 과목 선택
 subject = st.selectbox(
@@ -23,9 +26,8 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Hugging Face Router API (OpenAI 호환 최신 규격) 호출 함수
+# Hugging Face Router API 호출 함수
 def query_huggingface(prompt_text, token):
-    # 최신 Serverless Router Endpoint 사용
     api_url = "https://router.huggingface.co/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -55,9 +57,9 @@ def query_huggingface(prompt_text, token):
             result = response.json()
             return result["choices"][0]["message"]["content"]
         elif response.status_code == 401:
-            return "❌ **토큰 오류**: 입력하신 Hugging Face 토큰(API Key)이 올바르지 않거나 권한이 없습니다. 다시 확인해 주세요."
+            return "❌ **토큰 오류**: Secrets에 설정된 Hugging Face 토큰이 올바르지 않습니다."
         elif response.status_code == 503:
-            return "⏳ **모델 로딩 중**: AI 서버가 준비 중입니다. 10초 뒤에 다시 질문을 입력해 주세요!"
+            return "⏳ **모델 로딩 중**: AI 서버가 준비 중입니다. 10초 뒤에 다시 질문해 주세요!"
         else:
             return f"❌ **오류 발생**: (응답 코드: {response.status_code}) - {response.text}"
             
@@ -69,7 +71,7 @@ def query_huggingface(prompt_text, token):
 # 질문 입력 및 처리
 if prompt := st.chat_input(f"[{subject}] 관련 질문을 입력하세요..."):
     if not hf_token:
-        st.error("사이드바에 Hugging Face 토큰을 입력해 주세요.")
+        st.error("Streamlit Secrets에 'HF_TOKEN'이 설정되지 않았습니다. 설정 파일을 확인해 주세요.")
     else:
         # 사용자 질문 표시 및 저장
         st.chat_message("user").markdown(prompt)
