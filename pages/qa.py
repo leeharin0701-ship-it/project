@@ -23,31 +23,48 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Hugging Face Inference API 호출 함수
+# Hugging Face Router API (OpenAI 호환 최신 규격) 호출 함수
 def query_huggingface(prompt_text, token):
-    # 무료 모델 사용 (Qwen/Qwen2.5-7B-Instruct)
-    api_url = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct"
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    payload = {
-        "inputs": f"<|im_start|>system\n당신은 친절한 {subject} 선생님입니다. 학생의 질문에 이해하기 쉽게 한국어로 답변하세요.<|im_end|>\n<|im_start|>user\n{prompt_text}<|im_end|>\n<|im_start|>assistant\n",
-        "parameters": {
-            "max_new_tokens": 500,
-            "temperature": 0.7,
-            "return_full_text": False
-        }
+    # 최신 Serverless Router Endpoint 사용
+    api_url = "https://router.huggingface.co/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
     }
     
-    response = requests.post(api_url, headers=headers, json=payload, timeout=20)
+    payload = {
+        "model": "Qwen/Qwen2.5-7B-Instruct",
+        "messages": [
+            {
+                "role": "system",
+                "content": f"당신은 친절한 {subject} 선생님입니다. 학생의 질문에 쉽고 명확하게 한국어로 답변하세요."
+            },
+            {
+                "role": "user",
+                "content": prompt_text
+            }
+        ],
+        "max_tokens": 500,
+        "temperature": 0.7
+    }
     
-    if response.status_code == 200:
-        result = response.json()
-        if isinstance(result, list) and len(result) > 0:
-            return result[0].get("generated_text", "답변을 생성하지 못했습니다.")
-    elif response.status_code == 503:
-        return "모델을 로딩 중입니다. 10~20초 후 다시 시도해 주세요!"
-    
-    return f"오류가 발생했습니다. (코드: {response.status_code})"
+    try:
+        response = requests.post(api_url, headers=headers, json=payload, timeout=25)
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result["choices"][0]["message"]["content"]
+        elif response.status_code == 401:
+            return "❌ **토큰 오류**: 입력하신 Hugging Face 토큰(API Key)이 올바르지 않거나 권한이 없습니다. 다시 확인해 주세요."
+        elif response.status_code == 503:
+            return "⏳ **모델 로딩 중**: AI 서버가 준비 중입니다. 10초 뒤에 다시 질문을 입력해 주세요!"
+        else:
+            return f"❌ **오류 발생**: (응답 코드: {response.status_code}) - {response.text}"
+            
+    except requests.exceptions.Timeout:
+        return "⚠️ 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요."
+    except Exception as e:
+        return f"⚠️ 에러 발생: {str(e)}"
 
 # 질문 입력 및 처리
 if prompt := st.chat_input(f"[{subject}] 관련 질문을 입력하세요..."):
