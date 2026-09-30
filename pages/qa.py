@@ -34,8 +34,9 @@ def query_huggingface(prompt_text, token):
         "Content-Type": "application/json"
     }
     
+    # 안정적으로 제공되는 Llama-3.2-3B-Instruct 모델로 변경
     payload = {
-        "model": "Qwen/Qwen2.5-7B-Instruct",
+        "model": "meta-llama/Llama-3.2-3B-Instruct",
         "messages": [
             {
                 "role": "system",
@@ -71,7 +72,7 @@ def query_huggingface(prompt_text, token):
 # 질문 입력 및 처리
 if prompt := st.chat_input(f"[{subject}] 관련 질문을 입력하세요..."):
     if not hf_token:
-        st.error("Streamlit Secrets에 'HF_TOKEN'이 설정되지 않았습니다. 설정 파일을 확인해 주세요.")
+        st.error("Streamlit Secrets에 'HF_TOKEN'이 설정되지 않았습니다. `.streamlit/secrets.toml` 설정을 확인해 주세요.")
     else:
         # 사용자 질문 표시 및 저장
         st.chat_message("user").markdown(prompt)
