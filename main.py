@@ -3,17 +3,17 @@ import random
 import streamlit as st
 
 # 페이지 기본 설정
-st.set_page_config(page_title="To-Do & D-Day", layout="centered")
+st.set_page_config(page_title="To-Do & D-Day", page_icon="✅", layout="centered")
 
 # ----------------------------------------------------
-# 1. 풍부한 명언 데이터베이스 (100개 이상)
+# 1. 풍부한 명언 데이터베이스 (100개 이상 보존)
 # ----------------------------------------------------
 QUOTES_DB = [
     ("삶이 있는 한 희망은 있다.", "키케로"),
     ("산다는것 그것은 격렬한 유희이다.", "로망로랑"),
     ("하루에 3시간을 걸으면 7년 후에 지구를 한 바퀴 돌 수 있다.", "사무엘 존슨"),
     ("언제나 화면을 향해라. 그리하면 그림자는 너의 뒤로 떨어진다.", "월트 휘트먼"),
-    ("진정으로 웃으려면 고통을 참아내야 하며, 나아가 고통을 즐길 줄 알아야 한다.", "찰리 채플린"),
+    ("진정으로 웃으려면 고통을 참아내야 하며, 나아가 고통을 즐줄 알아야 한다.", "찰리 채플린"),
     ("직업에서 행복을 찾아라. 삶은 활기차게 진행된다.", "토마스 에디슨"),
     ("신은 용기있는 자를 결코 버리지 않는다.", "켄러"),
     ("피할 수 없으면 즐겨라.", "로버트 엘리엇"),
@@ -113,45 +113,58 @@ QUOTES_DB = [
 ]
 
 # ----------------------------------------------------
-# 2. 세션 상태 및 렌더링마다 무작위 명언 추출
+# 2. 세션 상태 초기화
 # ----------------------------------------------------
-quote_text, quote_author = random.choice(QUOTES_DB)
+if "current_quote" not in st.session_state:
+    st.session_state.current_quote = random.choice(QUOTES_DB)
 
 if "dday_data" not in st.session_state:
     st.session_state.dday_data = None
+
+if "todos" not in st.session_state:
+    st.session_state.todos = []
 
 # ----------------------------------------------------
 # 3. 상단 레이아웃: 왼쪽(D-Day 영역), 오른쪽(명언 영역)
 # ----------------------------------------------------
 col_left, col_right = st.columns([1, 1])
 
-# 오른쪽 상단: 무작위 명언 표시 (버튼 없음)
+# 오른쪽 상단: 명언 표시
 with col_right:
+    quote_text, quote_author = st.session_state.current_quote
     st.markdown(
-        f"<div style='text-align: right; color: #555; font-size: 0.88em; padding-top: 10px;'>"
-        f"<i>\"{quote_text}\"</i><br><b>- {quote_author} -</b>"
-        f"</div>",
+        f"""
+        <div style='text-align: right; color: #555; font-size: 0.9em; padding-top: 10px; line-height: 1.4;'>
+            <i>"{quote_text}"</i><br>
+            <b>- {quote_author} -</b>
+        </div>
+        """,
         unsafe_allow_html=True
     )
+    # 다른 명언 보기 버튼 (우측 정렬용 서브 컬럼)
+    _, btn_col = st.columns([2, 1])
+    with btn_col:
+        if st.button("🎲 다른 명언", key="refresh_quote", use_container_width=True):
+            st.session_state.current_quote = random.choice(QUOTES_DB)
+            st.rerun()
 
 # 왼쪽 상단: D-Day 표시 및 설정
 with col_left:
     if st.session_state.dday_data is None:
-        st.subheader("D-Day 설정")
-        dday_title = st.text_input("목표 이름", key="dday_title_input")
+        st.subheader("📌 D-Day 설정")
+        dday_title = st.text_input("목표 이름", key="dday_title_input", placeholder="예: 자격증 시험")
         target_date = st.date_input("목표 날짜", value=date.today())
 
         if st.button("D-Day 설정"):
-            if dday_title:
+            if dday_title.strip():
                 st.session_state.dday_data = {
-                    "title": dday_title,
+                    "title": dday_title.strip(),
                     "target_date": target_date
                 }
                 st.rerun()
             else:
                 st.warning("목표 이름을 입력하세요.")
     else:
-        # D-Day 계산
         title = st.session_state.dday_data["title"]
         target_date = st.session_state.dday_data["target_date"]
         today = date.today()
@@ -173,7 +186,7 @@ with col_left:
             """,
             unsafe_allow_html=True
         )
-        if st.button("D-Day 재설정", key="reset_dday"):
+        if st.button("⚙️ D-Day 재설정", key="reset_dday"):
             st.session_state.dday_data = None
             st.rerun()
 
@@ -182,30 +195,40 @@ st.divider()
 # ----------------------------------------------------
 # 4. To-Do 리스트
 # ----------------------------------------------------
-st.header("To-Do 리스트")
+st.header("📝 To-Do 리스트")
 
-if "todos" not in st.session_state:
-    st.session_state.todos = []
+# 폼 형태로 묶어 엔터키 입력 가능
+with st.form(key="add_todo_form", clear_on_submit=True):
+    col_input, col_btn = st.columns([4, 1])
+    with col_input:
+        new_todo = st.text_input("새로운 할 일 추가", placeholder="할 일을 입력하고 엔터를 누르세요.", label_visibility="collapsed")
+    with col_btn:
+        submit = st.form_submit_button("추가", use_container_width=True)
 
-new_todo = st.text_input("할 일 입력", key="todo_input")
+if submit and new_todo.strip():
+    st.session_state.todos.append({"text": new_todo.strip(), "done": False})
+    st.rerun()
 
-if st.button("할 일 추가"):
-    if new_todo:
-        st.session_state.todos.append({"text": new_todo, "done": False})
-        st.rerun()
-
+# To-Do 목록 렌더링
 if st.session_state.todos:
     for i, item in enumerate(st.session_state.todos):
-        col1, col2 = st.columns([4, 1])
+        col_check, col_del = st.columns([5, 1])
         
-        if item["done"]:
-            col1.markdown(f"~{item['text']}~")
-        else:
-            col1.write(f"- {item['text']}")
-            
-        btn_label = "취소" if item["done"] else "완료"
-        if col2.button(btn_label, key=f"toggle_{i}"):
-            st.session_state.todos[i]["done"] = not st.session_state.todos[i]["done"]
+        # 완료 체크박스
+        is_done = col_check.checkbox(
+            item["text"], 
+            value=item["done"], 
+            key=f"todo_check_{i}"
+        )
+        
+        # 상태 업데이트
+        if is_done != item["done"]:
+            st.session_state.todos[i]["done"] = is_done
+            st.rerun()
+
+        # 삭제 버튼
+        if col_del.button("🗑️", key=f"del_{i}"):
+            st.session_state.todos.pop(i)
             st.rerun()
 else:
-    st.caption("등록된 할 일이 없습니다.")
+    st.info("등록된 할 일이 없습니다. 새로운 할 일을 추가해보세요!")
