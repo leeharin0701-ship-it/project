@@ -12,13 +12,27 @@ st.set_page_config(
 st.title("📅 일정 캘린더")
 
 # ----------------------------------------------------
-# 1. 공통 데이터 세션 상태 초기화
+# 1. 세션 상태 초기화
 # ----------------------------------------------------
 if "events" not in st.session_state:
     st.session_state.events = []
 
 # ----------------------------------------------------
-# 2. 사이드바: 시간별 상세 일정 추가 양식
+# 2. 대표 8가지 일정 색상 팔레트 정의
+# ----------------------------------------------------
+COLOR_PALETTE = {
+    "🔵 블루": "#3788d8",
+    "🟢 그린": "#27ae60",
+    "🔴 레드": "#e74c3c",
+    "🟡 옐로우": "#f39c12",
+    "🟣 퍼플": "#8e44ad",
+    "🟠 오렌지": "#e67e22",
+    "🪨 그레이": "#7f8c8d",
+    "🩷 핑크": "#fd79a8"
+}
+
+# ----------------------------------------------------
+# 3. 사이드바: 시간/날짜별 상세 일정 추가
 # ----------------------------------------------------
 with st.sidebar:
     st.header("➕ 새 일정 추가")
@@ -38,7 +52,15 @@ with st.sidebar:
     with col_e_time:
         end_t = st.time_input("종료 시간", value=time(10, 0)) if not is_all_day else None
 
-    event_color = st.color_picker("일정 색상", "#3788d8")
+    # 8가지 단일 컬러 선택 라디오 버튼
+    st.markdown("**일정 색상 선택**")
+    selected_color_name = st.radio(
+        "일정 색상 선택",
+        options=list(COLOR_PALETTE.keys()),
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+    event_color = COLOR_PALETTE[selected_color_name]
 
     if st.button("캘린더에 일정 추가", use_container_width=True):
         if event_title:
@@ -75,7 +97,7 @@ with st.sidebar:
         st.rerun()
 
 # ----------------------------------------------------
-# 3. FullCalendar 옵션 설정 (제목 중복 방지 및 한국어 설정)
+# 4. FullCalendar 설정
 # ----------------------------------------------------
 calendar_options = {
     "editable": True,
@@ -87,21 +109,20 @@ calendar_options = {
     },
     "initialView": "dayGridMonth",
     "locale": "ko",
-    # 중복 출력 현상을 방지하기 위한 포맷 고정
     "titleFormat": {"year": "numeric", "month": "long"},
-    "slotMinTime": "06:00:00",  # 주간/일간 뷰에서 시작 시간
-    "slotMaxTime": "24:00:00",  # 주간/일간 뷰에서 종료 시간
+    "slotMinTime": "06:00:00",
+    "slotMaxTime": "24:00:00",
 }
 
-# 📌 캘린더 렌더링
-calendar_state = calendar(
+# 📌 캘린더 출력
+calendar(
     events=st.session_state.events,
     options=calendar_options,
     key="my_calendar"
 )
 
 # ----------------------------------------------------
-# 4. 전체 일정 리스트 및 삭제 기능
+# 5. 전체 일정 목록 및 개별 삭제
 # ----------------------------------------------------
 st.subheader("📋 전체 일정 목록")
 
@@ -109,7 +130,6 @@ if st.session_state.events:
     for idx, ev in enumerate(st.session_state.events):
         col_info, col_btn = st.columns([4, 1])
         
-        # 시작/종료 시간 가독성 표기
         s_time_str = ev['start'].replace('T', ' ')
         e_time_str = ev['end'].replace('T', ' ')
         
@@ -120,4 +140,3 @@ if st.session_state.events:
             st.rerun()
 else:
     st.info("등록된 일정이 없습니다.")
-    
