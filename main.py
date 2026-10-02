@@ -112,39 +112,27 @@ QUOTES_DB = [
     ("단단한 돌도 계속 떨어지는 물방울에 구멍이 난다.", "오비디우스"),
 ]
 
-# 무작위 명언 추출 함수
-def get_random_quote_from_db():
-    return random.choice(QUOTES_DB)
-
 # ----------------------------------------------------
-# 2. 세션 상태 초기화
+# 2. 세션 상태 및 렌더링마다 무작위 명언 추출
 # ----------------------------------------------------
-if "today_quote" not in st.session_state:
-    st.session_state.today_quote = get_random_quote_from_db()
+quote_text, quote_author = random.choice(QUOTES_DB)
 
 if "dday_data" not in st.session_state:
     st.session_state.dday_data = None
-
-quote_text, quote_author = st.session_state.today_quote
 
 # ----------------------------------------------------
 # 3. 상단 레이아웃: 왼쪽(D-Day 영역), 오른쪽(명언 영역)
 # ----------------------------------------------------
 col_left, col_right = st.columns([1, 1])
 
-# 오른쪽 상단: 명언 표시 + 새 명언 보기 버튼
+# 오른쪽 상단: 무작위 명언 표시 (버튼 없음)
 with col_right:
     st.markdown(
-        f"<div style='text-align: right; color: #555; font-size: 0.88em; min-height: 55px;'>"
+        f"<div style='text-align: right; color: #555; font-size: 0.88em; padding-top: 10px;'>"
         f"<i>\"{quote_text}\"</i><br><b>- {quote_author} -</b>"
         f"</div>",
         unsafe_allow_html=True
     )
-    # 버튼을 우측 정렬 느낌으로 배치
-    btn_col1, btn_col2 = st.columns([1, 1])
-    if btn_col2.button("🔄 새 명언 보기", key="refresh_quote", use_container_width=True):
-        st.session_state.today_quote = get_random_quote_from_db()
-        st.rerun()
 
 # 왼쪽 상단: D-Day 표시 및 설정
 with col_left:
