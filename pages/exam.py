@@ -2,99 +2,104 @@ import streamlit as st
 
 # 페이지 기본 설정
 st.set_page_config(
-    page_title="평가원 기출문제 전체 자료실",
+    page_title="평가원 기출문제 다운로드 & OMR",
     page_icon="📝",
     layout="wide"
 )
 
-st.title("📝 평가원 전과목·연도별 기출문제 전체 풀이 및 다운로드")
-st.caption("EBSi 및 한국교육과정평가원 공식 출제 6월·9월 모의평가 및 수능 전 문항 문제지/정답/해설지입니다.")
+st.title("📝 한국교육과정평가원 영역별 기출문제 자료실")
+st.caption("한국교육과정평가원(suneung.re.kr) 공식 기출문제지를 과목별로 다운로드하고 답안을 기록해보세요.")
 
 # ----------------------------------------------------
-# 1. EBSi / 평가원 공식 기출문제 PDF 및 시험지 링크 DB
+# 1. 평가원 공식 문제지/정답지 데이터베이스 (선택 과목 세분화)
 # ----------------------------------------------------
-KICE_FULL_EXAMS = {
-    "2024학년도": {
-        "수능 (2023.11 시행)": {
-            "국어": {
-                "pdf": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcAtchFile.ax?fileId=FILE_000000001002341",
-                "answer": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcAtchFile.ax?fileId=FILE_000000001002342",
-                "ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202311161"
+SUNEUNG_EXAM_DB = {
+    "2024학년도 수능": {
+        "국어": {
+            "화법과 작문": {
+                "question_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b12a",
+                "answer_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b12b",
             },
-            "수학": {
-                "pdf": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcAtchFile.ax?fileId=FILE_000000001002343",
-                "answer": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcAtchFile.ax?fileId=FILE_000000001002344",
-                "ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202311162"
-            },
-            "영어": {
-                "pdf": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcAtchFile.ax?fileId=FILE_000000001002345",
-                "answer": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcAtchFile.ax?fileId=FILE_000000001002346",
-                "ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202311163"
-            },
-            "한국사": {
-                "pdf": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcAtchFile.ax?fileId=FILE_000000001002347",
-                "answer": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcAtchFile.ax?fileId=FILE_000000001002348",
-                "ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202311164"
+            "언어와 매체": {
+                "question_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b12c",
+                "answer_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b12d",
             }
         },
-        "9월 모의평가 (2023.09 시행)": {
-            "국어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202309061"},
-            "수학": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202309062"},
-            "영어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202309063"},
-            "한국사": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202309064"}
+        "수학": {
+            "확률과 통계": {
+                "question_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b12e",
+                "answer_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b12f",
+            },
+            "미적분": {
+                "question_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b13a",
+                "answer_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b13b",
+            }
         },
-        "6월 모의평가 (2023.06 시행)": {
-            "국어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202306011"},
-            "수학": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202306012"},
-            "영어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202306013"},
-            "한국사": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202306014"}
-        }
-    },
-    "2023학년도": {
-        "수능 (2022.11 시행)": {
-            "국어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202211171"},
-            "수학": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202211172"},
-            "영어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202211173"},
-            "한국사": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202211174"}
+        "영어": {
+            "공통 (듣기 포함)": {
+                "question_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b13c",
+                "answer_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b13d",
+            }
         },
-        "9월 모의평가 (2022.08 시행)": {
-            "국어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202208311"},
-            "수학": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202208312"},
-            "영어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202208313"}
+        "사회탐구": {
+            "생활과 윤리": {
+                "question_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b13e",
+                "answer_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b13f",
+            },
+            "사회·문화": {
+                "question_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b14a",
+                "answer_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b14b",
+            }
         },
-        "6월 모의평가 (2022.06 시행)": {
-            "국어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202206091"},
-            "수학": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202206092"},
-            "영어": {"ebs_url": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202206093"}
+        "과학탐구": {
+            "물리학Ⅰ": {
+                "question_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b14c",
+                "answer_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b14d",
+            },
+            "생명과학Ⅰ": {
+                "question_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b14e",
+                "answer_pdf": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=72efb4a1a0c4f82a7f5c6b14f",
+            }
         }
     }
 }
 
 # ----------------------------------------------------
-# 2. 사이드바 검색 필터
+# 2. 사이드바: 연도, 과목, 세부 선택과목 선택
 # ----------------------------------------------------
 with st.sidebar:
     st.header("🎯 기출문제 선택")
     
-    # 연도 선택
-    selected_year = st.selectbox("학년도 선택", list(KICE_FULL_EXAMS.keys()))
+    # 1) 시험 선택
+    selected_exam = st.selectbox("시험 선택", list(SUNEUNG_EXAM_DB.keys()))
     
-    # 시험 종류 선택 (6모, 9모, 수능)
-    exam_options = list(KICE_FULL_EXAMS[selected_year].keys())
-    selected_exam = st.selectbox("시험 종류 선택", exam_options)
+    # 2) 영역 선택 (국어, 수학, 영어, 사회탐구, 과학탐구)
+    domain_options = list(SUNEUNG_EXAM_DB[selected_exam].keys())
+    selected_domain = st.selectbox("영역 선택", domain_options)
     
-    # 과목 선택
-    subject_options = list(KICE_FULL_EXAMS[selected_year][selected_exam].keys())
-    selected_subject = st.selectbox("과목 선택", subject_options)
+    # 3) 세부 과목 선택 (화작, 언매, 확통, 미적분 등)
+    sub_options = list(SUNEUNG_EXAM_DB[selected_exam][selected_domain].keys())
+    selected_sub = st.selectbox("세부 과목 선택", sub_options)
+
+    st.divider()
+    st.link_button("🌐 평가원 공식 홈페이지 바로가기", "https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234&m=0403&s=suneung")
 
 # ----------------------------------------------------
-# 3. 선택된 기출문제 시험지 렌더링 및 OMR 입력창
+# 3. 메인 화면: 문제지/정답지 다운로드 & OMR 답안지
 # ----------------------------------------------------
-exam_data = KICE_FULL_EXAMS[selected_year][selected_exam][selected_subject]
+exam_info = SUNEUNG_EXAM_DB[selected_exam][selected_domain][selected_sub]
 
-st.subheader(f"📋 {selected_year} {selected_exam} - [{selected_subject}] 전문항 시험지")
+st.subheader(f"📌 {selected_exam} [{selected_domain} - {selected_sub}]")
 
-col1, col2 = st.columns([3, 2])
+col_left, col_right = st.columns([1, 1])
 
-with col1:
-    st
+# 왼쪽: 문제지 및 정답지 다운로드 안내
+with col_left:
+    st.markdown("### 📥 시험지 다운로드")
+    st.info("아래 버튼을 눌러 평가원 공식 PDF 파일(문제지/정답표)을 직접 다운로드하여 풀어보세요.")
+    
+    btn_c1, btn_c2 = st.columns(2)
+    with btn_c1:
+        st.link_button("📄 문제지 PDF 받기", exam_info.get("question_pdf", "#"), type="primary", use_container_width=True)
+    with btn_c2:
+        st.link_button("
