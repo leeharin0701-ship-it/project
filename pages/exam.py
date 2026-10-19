@@ -11,7 +11,7 @@ st.title("📝 한국교육과정평가원 영역별 기출문제 자료실")
 st.caption("한국교육과정평가원(suneung.re.kr) 공식 기출문제지를 과목별로 다운로드하고 답안을 기록해보세요.")
 
 # ----------------------------------------------------
-# 1. 평가원 공식 문제지/정답지 데이터베이스 (선택 과목 세분화)
+# 1. 평가원 공식 문제지/정답지 데이터베이스
 # ----------------------------------------------------
 SUNEUNG_EXAM_DB = {
     "2024학년도 수능": {
@@ -65,19 +65,13 @@ SUNEUNG_EXAM_DB = {
 }
 
 # ----------------------------------------------------
-# 2. 사이드바: 연도, 과목, 세부 선택과목 선택
+# 2. 사이드바
 # ----------------------------------------------------
 with st.sidebar:
     st.header("🎯 기출문제 선택")
-    
-    # 1) 시험 선택
     selected_exam = st.selectbox("시험 선택", list(SUNEUNG_EXAM_DB.keys()))
-    
-    # 2) 영역 선택 (국어, 수학, 영어, 사회탐구, 과학탐구)
     domain_options = list(SUNEUNG_EXAM_DB[selected_exam].keys())
     selected_domain = st.selectbox("영역 선택", domain_options)
-    
-    # 3) 세부 과목 선택 (화작, 언매, 확통, 미적분 등)
     sub_options = list(SUNEUNG_EXAM_DB[selected_exam][selected_domain].keys())
     selected_sub = st.selectbox("세부 과목 선택", sub_options)
 
@@ -85,7 +79,7 @@ with st.sidebar:
     st.link_button("🌐 평가원 공식 홈페이지 바로가기", "https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234&m=0403&s=suneung")
 
 # ----------------------------------------------------
-# 3. 메인 화면: 문제지/정답지 다운로드 & OMR 답안지
+# 3. 메인 영역
 # ----------------------------------------------------
 exam_info = SUNEUNG_EXAM_DB[selected_exam][selected_domain][selected_sub]
 
@@ -93,13 +87,42 @@ st.subheader(f"📌 {selected_exam} [{selected_domain} - {selected_sub}]")
 
 col_left, col_right = st.columns([1, 1])
 
-# 왼쪽: 문제지 및 정답지 다운로드 안내
 with col_left:
     st.markdown("### 📥 시험지 다운로드")
-    st.info("아래 버튼을 눌러 평가원 공식 PDF 파일(문제지/정답표)을 직접 다운로드하여 풀어보세요.")
+    st.info("아래 버튼을 눌러 평가원 공식 PDF 파일을 다운로드하세요.")
     
     btn_c1, btn_c2 = st.columns(2)
     with btn_c1:
         st.link_button("📄 문제지 PDF 받기", exam_info.get("question_pdf", "#"), type="primary", use_container_width=True)
     with btn_c2:
-        st.link_button("
+        st.link_button("📑 정답/해설 PDF 받기", exam_info.get("answer_pdf", "#"), use_container_width=True)
+
+with col_right:
+    st.markdown("### ✏️ OMR 답안 입력")
+    
+    if selected_domain in ["국어", "영어"]:
+        total_q = 45
+    elif selected_domain == "수학":
+        total_q = 30
+    else:
+        total_q = 20
+
+    with st.form(key="omr_submission_form"):
+        user_omr = {}
+        st.caption(f"총 {total_q}문항 OMR 답안지")
+        
+        for row in range(0, total_q, 5):
+            cols = st.columns(5)
+            for i in range(5):
+                q_num = row + i + 1
+                if q_num <= total_q:
+                    user_omr[q_num] = cols[i].selectbox(
+                        f"{q_num}번",
+                        options=["-", "1", "2", "3", "4", "5"],
+                        key=f"q_{selected_domain}_{selected_sub}_{q_num}"
+                    )
+        
+        submit_btn = st.form_submit_button("📥 답안 작성 완료 및 저장", type="primary", use_container_width=True)
+
+    if submit_btn:
+        st.success(f"🎉 [{selected_domain} - {selected_sub}] OMR 답안 기록이 저장되었습니다!")
