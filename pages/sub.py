@@ -1,108 +1,109 @@
 import time
 import streamlit as st
 
-st.set_page_config(page_title="과목별 타이머 & 스톱워치", layout="centered")
+# 페이지 기본 설정
+st.set_page_config(page_title="과목별 타이머 & 스톱워치", page_icon="⏱️", layout="centered")
 
-st.title("과목별 타이머 & 스톱워치")
+# ----------------------------------------------------
+# 1. 세션 상태 초기화 (총 공부 시간 및 과목별 누적 시간)
+# ----------------------------------------------------
+# 과목별 누적 학습 시간 (초 단위)
+if "subject_study_time" not in st.session_state:
+    st.session_state.subject_study_time = {
+        "국어": 0,
+        "수학": 0,
+        "영어": 0,
+        "탐구": 0,
+        "기타": 0
+    }
 
-# 과목 선택
-subject = st.selectbox("과목을 선택하세요", ["국어", "수학", "영어", "탐구", "기타"])
+# 스톱워치 세션 상태
+if "stopwatch_running" not in st.session_state:
+    st.session_state.stopwatch_running = False
+if "stopwatch_time" not in st.session_state:
+    st.session_state.stopwatch_time = 0
+
+# 타이머 세션 상태
+if "timer_active" not in st.session_state:
+    st.session_state.timer_active = False
+if "timer_running" not in st.session_state:
+    st.session_state.timer_running = False
+if "timer_seconds" not in st.session_state:
+    st.session_state.timer_seconds = 0
+
+# ----------------------------------------------------
+# 2. 상단 레이아웃 (제목 & 우측 상단 총 공부 시간)
+# ----------------------------------------------------
+col_title, col_total = st.columns([1.5, 1])
+
+# 총 공부 시간 계산 (모든 과목 누적 시간의 합)
+total_seconds = sum(st.session_state.subject_study_time.values())
+t_mins, t_secs = divmod(total_seconds, 60)
+t_hours, t_mins = divmod(t_mins, 60)
+
+with col_title:
+    st.title("⏱️ 과목별 타이머")
+
+with col_total:
+    # 우측 상단에 총 공부 시간 박스 표시
+    st.markdown(
+        f"""
+        <div style="background-color: #f0f2f6; padding: 12px; border-radius: 10px; text-align: center; margin-top: 10px;">
+            <span style="font-size: 0.85em; color: #555; font-weight: bold;">🔥 오늘 총 공부 시간</span><br>
+            <span style="font-size: 1.6em; font-weight: bold; color: #2E86AB;">{t_hours:02d}:{t_mins:02d}:{t_secs:02d}</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 st.divider()
 
+# ----------------------------------------------------
+# 3. 과목 선택 및 과목별 현재 공부 시간 출력
+# ----------------------------------------------------
+subject = st.selectbox("과목을 선택하세요", ["국어", "수학", "영어", "탐구", "기타"])
+
+# 현재 선택된 과목의 누적 학습 시간
+sub_secs = st.session_state.subject_study_time[subject]
+s_m, s_s = divmod(sub_secs, 60)
+s_h, s_m = divmod(s_m, 60)
+
+st.caption(f"📚 **{subject}** 누적 공부 시간: **{s_h:02d}시간 {s_m:02d}분 {s_s:02d}초**")
+
 # 탭 구분
-tab1, tab2 = st.tabs(["⏱️️ 스톱워치", "⏳ 타이머"])
+tab1, tab2 = st.tabs(["⏱ 스톱워치", "⏳ 타이머"])
 
 # ----------------------------------------------------
-# 1. 스톱워치
+# 4. 스톱워치 (측정 시 총 공부 시간 자동 누적)
 # ----------------------------------------------------
 with tab1:
     st.header(f"[{subject}] 스톱워치")
     
-    if "stopwatch_running" not in st.session_state:
-        st.session_state.stopwatch_running = False
-    if "stopwatch_time" not in st.session_state:
-        st.session_state.stopwatch_time = 0
-
-    # ① 시간 표시를 상단에 배치
+    # 시간 표시
     mins, secs = divmod(st.session_state.stopwatch_time, 60)
     hours, mins = divmod(mins, 60)
     
     time_display = st.empty()
-    time_display.metric("경과 시간", f"{hours:02d}:{mins:02d}:{secs:02d}")
+    time_display.metric("현재 스톱워치 측정 시간", f"{hours:02d}:{mins:02d}:{secs:02d}")
 
-    # ② 버튼들을 숫자(시간) 아래에 배치
+    # 제어 버튼
     col1, col2, col3 = st.columns(3)
     
-    if col1.button("시작", key="sw_start", use_container_width=True):
+    if col1.button("▶️ 시작", key="sw_start", use_container_width=True):
         st.session_state.stopwatch_running = True
-    if col2.button("정지", key="sw_stop", use_container_width=True):
+        st.rerun()
+        
+    if col2.button("⏸️ 정지", key="sw_stop", use_container_width=True):
         st.session_state.stopwatch_running = False
-    if col3.button("리셋", key="sw_reset", use_container_width=True):
+        st.rerun()
+        
+    if col3.button("🔄 리셋", key="sw_reset", use_container_width=True):
         st.session_state.stopwatch_running = False
         st.session_state.stopwatch_time = 0
         st.rerun()
 
-    # 스톱워치 1초 간격 루프
+    # 스톱워치 카운트 및 총시간 자동 증가
     if st.session_state.stopwatch_running:
         time.sleep(1)
         st.session_state.stopwatch_time += 1
-        st.rerun()
-
-# ----------------------------------------------------
-# 2. 타이머
-# ----------------------------------------------------
-with tab2:
-    st.header(f"[{subject}] 타이머")
-
-    # 세션 상태 초기화
-    if "timer_active" not in st.session_state:
-        st.session_state.timer_active = False  # 타이머 화면 전환 여부
-    if "timer_running" not in st.session_state:
-        st.session_state.timer_running = False  # 타이머 카운트다운 진행 여부
-    if "timer_seconds" not in st.session_state:
-        st.session_state.timer_seconds = 0
-
-    # ① 타이머가 시작되지 않았을 때 (설정 화면)
-    if not st.session_state.timer_active:
-        minutes_input = st.number_input("설정할 시간(분)", min_value=1, max_value=180, value=25)
-        
-        if st.button("타이머 시작", key="timer_start_init", use_container_width=True):
-            st.session_state.timer_seconds = minutes_input * 60
-            st.session_state.timer_active = True
-            st.session_state.timer_running = True
-            st.rerun()
-
-    # ② 타이머가 작동 중이거나 일시정지 상태일 때 (타이머 진행 화면)
-    else:
-        # 남은 시간 계산 및 표시
-        m, s = divmod(st.session_state.timer_seconds, 60)
-        timer_display = st.empty()
-        timer_display.metric("남은 시간", f"{m:02d}:{s:02d}")
-
-        # 제어 버튼 (일시정지 / 시작 / 취소)
-        t_col1, t_col2 = st.columns(2)
-        
-        if st.session_state.timer_running:
-            if t_col1.button("일시정지", key="timer_pause", use_container_width=True):
-                st.session_state.timer_running = False
-                st.rerun()
-        else:
-            if t_col1.button("재개", key="timer_resume", use_container_width=True):
-                st.session_state.timer_running = True
-                st.rerun()
-
-        if t_col2.button("취소 및 설정으로", key="timer_cancel", use_container_width=True):
-            st.session_state.timer_active = False
-            st.session_state.timer_running = False
-            st.session_state.timer_seconds = 0
-            st.rerun()
-
-        # 카운트다운 진행
-        if st.session_state.timer_running and st.session_state.timer_seconds > 0:
-            time.sleep(1)
-            st.session_state.timer_seconds -= 1
-            st.rerun()
-        elif st.session_state.timer_running and st.session_state.timer_seconds == 0:
-            st.session_state.timer_running = False
-            st.success(f"🎉 [{subject}] 설정한 시간이 종료되었습니다!")
+        st.session_state.subject_
