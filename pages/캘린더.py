@@ -23,6 +23,9 @@ if "selected_date" not in st.session_state:
 if "open_dialog" not in st.session_state:
     st.session_state.open_dialog = False
 
+if "last_calendar_data" not in st.session_state:
+    st.session_state.last_calendar_data = None
+
 # ----------------------------------------------------
 # 2. 색상 팔레트 정의
 # ----------------------------------------------------
@@ -69,12 +72,13 @@ def add_event_dialog(target_date):
                 }
                 st.session_state.events.append(new_event)
                 st.session_state.open_dialog = False
+                st.session_state.last_calendar_data = None  # 데이터 초기화
                 st.success("일정이 추가되었습니다!")
                 st.rerun()
             else:
                 st.warning("일정 제목을 입력해주세요.")
 
-# 사이드바 관리 메뉴 (전체 초기화 전용)
+# 사이드바 관리 메뉴
 with st.sidebar:
     st.header("⚙️ 캘린더 설정")
     if st.button("🧹 모든 일정 초기화", use_container_width=True):
@@ -82,11 +86,11 @@ with st.sidebar:
         st.rerun()
 
 # ----------------------------------------------------
-# 4. FullCalendar 렌더링 및 클릭/선택 감지
+# 4. FullCalendar 렌더링 및 클릭 감지
 # ----------------------------------------------------
 calendar_options = {
     "editable": True,
-    "selectable": True,  # 날짜 칸 클릭/선택 활성화
+    "selectable": True,
     "selectMirror": True,
     "headerToolbar": {
         "left": "prev,next today",
@@ -104,19 +108,18 @@ calendar_data = calendar(
     key="my_calendar"
 )
 
-# 📌 캘린더에서 날짜 칸을 클릭(선택)했을 때 즉시 팝업 트리거
-if calendar_data:
-    selected_info = calendar_data.get("select")
-    date_click_info = calendar_data.get("dateClick")
+# 📌 신규 클릭 이벤트만 정확히 감지하여 해당 날짜로 팝업 오픈
+if calendar_data and calendar_data != st.session_state.last_calendar_data:
+    st.session_state.last_calendar_data = calendar_data
     
-    target_str = None
-    if selected_info:
-        target_str = selected_info.get("start")
-    elif date_click_info:
-        target_str = date_click_info.get("dateStr")
+    clicked_date_str = None
+    if "dateClick" in calendar_data and calendar_data["dateClick"]:
+        clicked_date_str = calendar_data["dateClick"].get("dateStr")
+    elif "select" in calendar_data and calendar_data["select"]:
+        clicked_date_str = calendar_data["select"].get("start")
         
-    if target_str:
-        clean_date = target_str[:10]
+    if clicked_date_str:
+        clean_date = clicked_date_str[:10]
         st.session_state.selected_date = datetime.strptime(clean_date, "%Y-%m-%d").date()
         st.session_state.open_dialog = True
         st.rerun()
