@@ -23,6 +23,9 @@ if "selected_date" not in st.session_state:
 if "open_dialog" not in st.session_state:
     st.session_state.open_dialog = False
 
+if "last_processed_date" not in st.session_state:
+    st.session_state.last_processed_date = None
+
 # ----------------------------------------------------
 # 2. 색상 팔레트 정의
 # ----------------------------------------------------
@@ -69,6 +72,7 @@ def add_event_dialog(target_date):
                 }
                 st.session_state.events.append(new_event)
                 st.session_state.open_dialog = False
+                st.session_state.last_processed_date = None  # 초기화
                 st.success("일정이 추가되었습니다!")
                 st.rerun()
             else:
@@ -104,26 +108,23 @@ calendar_data = calendar(
     key="my_calendar"
 )
 
-# 📌 캘린더 클릭 시 즉시 팝업 오픈 (데이터가 존재할 경우)
-if calendar_data:
-    clicked_date_str = None
-    
-    # dateClick 또는 select 데이터 추출
-    if isinstance(calendar_data, dict):
-        if "dateClick" in calendar_data and calendar_data["dateClick"]:
-            clicked_date_str = calendar_data["dateClick"].get("dateStr")
-        elif "select" in calendar_data and calendar_data["select"]:
-            clicked_date_str = calendar_data["select"].get("start")
+# 📌 캘린더 클릭 감지 및 스티키 상태(이전 값 고정) 방지
+clicked_date_str = None
+if calendar_data and isinstance(calendar_data, dict):
+    if "dateClick" in calendar_data and calendar_data["dateClick"]:
+        clicked_date_str = calendar_data["dateClick"].get("dateStr")
+    elif "select" in calendar_data and calendar_data["select"]:
+        clicked_date_str = calendar_data["select"].get("start")
 
-    if clicked_date_str:
-        clean_date = clicked_date_str[:10]
-        parsed_date = datetime.strptime(clean_date, "%Y-%m-%d").date()
-        
-        # 날짜가 새로 선택되었거나 팝업이 닫혀있는 상태일 때만 오픈
-        if not st.session_state.open_dialog or st.session_state.selected_date != parsed_date:
-            st.session_state.selected_date = parsed_date
-            st.session_state.open_dialog = True
-            st.rerun()
+if clicked_date_str:
+    clean_date = clicked_date_str[:10]
+    
+    # 이전에 처리한 날짜와 다를 때만 새 팝업을 띄움
+    if clean_date != st.session_state.last_processed_date:
+        st.session_state.last_processed_date = clean_date
+        st.session_state.selected_date = datetime.strptime(clean_date, "%Y-%m-%d").date()
+        st.session_state.open_dialog = True
+        st.rerun()
 
 # 팝업 상태가 True이면 모달창 띄우기
 if st.session_state.open_dialog:
