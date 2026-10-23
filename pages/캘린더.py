@@ -18,13 +18,13 @@ if "events" not in st.session_state:
     st.session_state.events = []
 
 if "selected_date" not in st.session_state:
-    st.session_state.selected_date = str(date.today())
+    st.session_state.selected_date = date.today()
 
 if "open_dialog" not in st.session_state:
     st.session_state.open_dialog = False
 
 # ----------------------------------------------------
-# 2. 대표 8가지 일정 색상 팔레트 정의
+# 2. 색상 팔레트 정의
 # ----------------------------------------------------
 COLOR_PALETTE = {
     "🔵 블루": "#3788d8",
@@ -38,23 +38,21 @@ COLOR_PALETTE = {
 }
 
 # ----------------------------------------------------
-# 3. 캘린더 클릭 시 뜨는 모달 팝업 정의
+# 3. 일정 등록 팝업(Modal) 정의
 # ----------------------------------------------------
 @st.dialog("📌 새 일정 추가하기")
-def add_event_dialog(date_str):
-    st.write(f"선택한 날짜: **{date_str}**")
+def add_event_dialog(target_date):
+    st.write(f"선택한 날짜: **{target_date}**")
     
     with st.form("modal_event_form"):
         popup_title = st.text_input("일정 제목", placeholder="할 일을 입력하세요")
         is_all_day = st.checkbox("하루 종일 (시간 미지정)", value=True)
         
-        d_val = datetime.strptime(date_str, "%Y-%m-%d").date()
-        
         col1, col2 = st.columns(2)
         with col1:
-            start_d = st.date_input("시작 날짜", value=d_val)
+            start_d = st.date_input("시작 날짜", value=target_date)
         with col2:
-            end_d = st.date_input("종료 날짜", value=d_val)
+            end_d = st.date_input("종료 날짜", value=target_date)
             
         selected_color_name = st.selectbox("일정 색상", options=list(COLOR_PALETTE.keys()))
         event_color = COLOR_PALETTE[selected_color_name]
@@ -70,21 +68,32 @@ def add_event_dialog(date_str):
                     "color": event_color
                 }
                 st.session_state.events.append(new_event)
-                st.session_state.open_dialog = False  # 팝업 닫기
+                st.session_state.open_dialog = False
                 st.success("일정이 추가되었습니다!")
                 st.rerun()
             else:
                 st.warning("일정 제목을 입력해주세요.")
 
-# 사이드바 설정
+# ----------------------------------------------------
+# 4. 사이드바: 날짜 직접 선택 및 관리
+# ----------------------------------------------------
 with st.sidebar:
-    st.header("⚙️ 캘린더 관리")
+    st.header("➕ 일정 직접 추가")
+    st.caption("캘린더 클릭이 원활하지 않을 경우 아래 날짜 선택 후 버튼을 누르세요.")
+    
+    direct_date = st.date_input("등록할 날짜", value=date.today())
+    if st.button("📝 해당 날짜에 일정 추가", use_container_width=True):
+        st.session_state.selected_date = direct_date
+        st.session_state.open_dialog = True
+        st.rerun()
+
+    st.divider()
     if st.button("🧹 모든 일정 초기화", use_container_width=True):
         st.session_state.events = []
         st.rerun()
 
 # ----------------------------------------------------
-# 4. FullCalendar 설정 및 클릭 감지
+# 5. FullCalendar 렌더링 및 이벤트 감지
 # ----------------------------------------------------
 calendar_options = {
     "editable": True,
@@ -106,28 +115,31 @@ calendar_data = calendar(
     key="my_calendar"
 )
 
-# 📌 캘린더 날짜 칸을 클릭했을 때 상태를 True로 변경하고 즉시 리런
-if calendar_data:
-    if calendar_data.get("dateClick"):
-        clicked_date = calendar_data["dateClick"].get("dateStr")
-        if clicked_date:
-            st.session_state.selected_date = clicked_date[:10]
-            st.session_state.open_dialog = True
-            st.rerun()
-            
-    elif calendar_data.get("select"):
-        start_str = calendar_data["select"].get("start")
-        if start_str:
-            st.session_state.selected_date = start_str[:10]
-            st.session_state.open_dialog = True
-            st.rerun()
+# 🔍 디버깅용 (캘린더를 클릭했을 때 어떤 값이 들어오는지 화면 하단에 표시)
+with st.expander("🛠️ 디버그 정보 (클릭 감지 확인용)", expanded=False):
+    st.write(calendar_data)
 
-# 📌 팝업 상태가 활성화되어 있으면 다이얼로그 띄우기
+# 캘린더 클릭 이벤트 처리
+if calendar_data:
+    clicked_date_str = None
+    
+    if "dateClick" in calendar_data and calendar_data["dateClick"]:
+        clicked_date_str = calendar_data["dateClick"].get("dateStr")
+    elif "select" in calendar_data and calendar_data["select"]:
+        clicked_date_str = calendar_data["select"].get("start")
+        
+    if clicked_date_str:
+        clean_date = clicked_date_str[:10]
+        st.session_state.selected_date = datetime.strptime(clean_date, "%Y-%m-%d").date()
+        st.session_state.open_dialog = True
+        st.rerun()
+
+# 팝업 오픈 상태 체크
 if st.session_state.open_dialog:
     add_event_dialog(st.session_state.selected_date)
 
 # ----------------------------------------------------
-# 5. 전체 일정 목록 및 삭제
+# 6. 전체 일정 목록
 # ----------------------------------------------------
 st.divider()
 st.subheader("📋 전체 일정 목록")
