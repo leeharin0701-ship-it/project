@@ -38,7 +38,7 @@ if subject == "국어":
     
     with tab1:
         st.subheader("1. 문학 실전 독해 및 수사학")
-        with st.expander("📌 시가 문학 개념 및 수사법", expanded=True):
+        with st.expander("📌 시", expanded=True):
             st.markdown("""
 
             #### 1) 시
