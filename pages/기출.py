@@ -30,7 +30,7 @@ EXAM_STRUCTURE = {
 
 # EBSi 연도/시험별 직통 딥링크
 EBS_DIRECT_LINKS = {
-    "2024학년도 수능 (2023.11)": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=60defdef6d83db1b756f841089563c5a",
+    "2026학년도 수능 기출": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=60defdef6d83db1b756f841089563c5a",
     "2024학년도 9월 모의평가": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202309061",
     "2024학년도 6월 모의평가": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202306011",
     "2023학년도 수능 (2022.11)": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202211171",
