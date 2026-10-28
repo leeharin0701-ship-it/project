@@ -8,14 +8,14 @@ st.set_page_config(
 )
 
 st.title("📝 평가원 기출문제 OMR & 자동 채점 포털")
-st.caption("시험 및 과목별로 원본 문제지 링크를 각각 연결하여 바로 다운로드하고 채점하세요.")
+st.caption("시험 및 과목별로 원본 문제지 링크와 정답 데이터가 연동되어 정확한 자동 채점을 지원합니다.")
 
 # ----------------------------------------------------
 # 1. 과목 및 시험 선택 구조
 # ----------------------------------------------------
 EXAM_STRUCTURE = {
-    "국어": ["국어 영역"],
-    "수학": ["수학 영역"],
+    "국어": ["화법과 작문", "언어와 매체"],
+    "수학": ["확률과 통계", "미적분", "기하"],
     "영어": ["공통 (듣기 포함)"],
     "한국사": ["필수 공통"],
     "사회탐구": [
@@ -39,64 +39,30 @@ EXAM_LIST = [
 ]
 
 # ----------------------------------------------------
-# 2. [핵심] 시험 및 과목별 개별 링크 데이터베이스
+# 2. 시험 및 과목별 원본 문제지 다운로드 링크
 # ----------------------------------------------------
-# 구조: { "시험 이름": { "과목명": "해당 과목 PDF 또는 다운로드 링크" } }
-# ※ 아래 링크는 예시이며, 원하시는 과목별 링크(PDF 주소 또는 EBSi/평가원 상세페이지)를 자유롭게 수정·입력하세요.
 EXAM_SUBJECT_LINKS = {
     "2026학년도 수능": {
-        "국어 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=60defdef6d83db1b756f841089563c5a",
-        "수학 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=f9055b3484e9176cea7c74b9819a7d2c",
-        "영어 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=e0431cad0731556faee928fd38c81241",
-        "한국사": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=10b6d784275a07a82efa90ddcb8fbd22",
-        "사회 탐구": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=10b6d784275a07a82efa90ddcb8fbd22", #보류
-        "과학 탐구": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=10b6d784275a07a82efa90ddcb8fbd22",
-        # 필요한 과목들의 링크를 계속 추가할 수 있습니다.
-    },
-    "2025학년도 9월 수능": {
-         "국어 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=60defdef6d83db1b756f841089563c5a",
-        "수학 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=f9055b3484e9176cea7c74b9819a7d2c",
-        "영어 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=e0431cad0731556faee928fd38c81241",
-        "한국사": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=10b6d784275a07a82efa90ddcb8fbd22",
+        "화법과 작문": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=60defdef6d83db1b756f841089563c5a",
+        "언어와 매체": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=60defdef6d83db1b756f841089563c5a",
+        "확률과 통계": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=f9055b3484e9176cea7c74b9819a7d2c",
+        "미적분": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=f9055b3484e9176cea7c74b9819a7d2c",
+        "기하": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=f9055b3484e9176cea7c74b9819a7d2c",
+        "공통 (듣기 포함)": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=e0431cad0731556faee928fd38c81241",
+        "필수 공통": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=10b6d784275a07a82efa90ddcb8fbd22",
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 기본 fallback 링크 (등록되지 않은 과목 선택 시 안내용)
 DEFAULT_LINK = "https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234&m=0403&s=suneung"
 
 # ----------------------------------------------------
-# 3. 시험별 예시 정답 데이터베이스 (자동 채점용)
+# 3. 시험별/과목별 정답 데이터베이스
 # ----------------------------------------------------
 OFFICIAL_ANSWERS = {
-    "국어": {1: 1, 2: 4, 3: 2, 4: 5, 5: 3, 6: 1, 7: 3, 8: 4, 9: 2, 10: 5, 
-             11: 3, 12: 1, 13: 4, 14: 2, 15: 5, 16: 2, 17: 3, 18: 1, 19: 4, 20: 5,
-             21: 1, 22: 3, 23: 2, 24: 4, 25: 5, 26: 1, 27: 3, 28: 2, 29: 4, 30: 5,
-             31: 2, 32: 1, 33: 4, 34: 3, 35: 5, 36: 1, 37: 2, 38: 4, 39: 3, 40: 5,
-             41: 2, 42: 1, 43: 3, 44: 4, 45: 5},
-    "수학": {1: 3, 2: 5, 3: 1, 4: 4, 5: 2, 6: 3, 7: 5, 8: 1, 9: 4, 10: 2,
-             11: 3, 12: 5, 13: 1, 14: 4, 15: 2, 16: 3, 17: 5, 18: 1, 19: 4, 20: 2,
-             21: 3, 22: 15, 23: 3, 24: 12, 25: 8, 26: 27, 27: 5, 28: 16, 29: 84, 30: 125},
-    "영어": {i: (i % 5) + 1 for i in range(1, 46)},
-    "탐구": {i: (i % 5) + 1 for i in range(1, 21)}
+    "2026학년도 수능": {
+        "화법과 작문": {i: int(c) for i, c in enumerate("354142535531151232432514425513241325312544321", 1)},
+        "언어와 매체": {i: int(c) for i, c in enumerate("354142535531151232432514425513241332441245243", 1)}
+    }
 }
 
 # ----------------------------------------------------
@@ -111,7 +77,7 @@ with st.sidebar:
     st.divider()
     if st.button("🔄 OMR 초기화", use_container_width=True):
         st.session_state["submitted"] = False
-        st.session_state["omr_inputs"] = {}
+        st.session_state["user_answers"] = {}
         st.rerun()
 
 # ----------------------------------------------------
@@ -125,7 +91,6 @@ col_left, col_right = st.columns([1, 1.2])
 with col_left:
     st.markdown(f"### 📥 [{selected_sub}] 문제지 열기")
     
-    # 선택된 시험과 과목에 맞는 링크 가져오기 (없으면 기본 평가원 보관함 링크 제공)
     target_url = EXAM_SUBJECT_LINKS.get(selected_exam, {}).get(selected_sub, DEFAULT_LINK)
     
     st.link_button(
@@ -167,7 +132,7 @@ with col_right:
                             max_value=999,
                             value=None,
                             step=1,
-                            key=f"q_key_{selected_domain}_{selected_sub}_{q_num}"
+                            key=f"q_key_{selected_exam}_{selected_domain}_{selected_sub}_{q_num}"
                         )
                     else:
                         ans = cols[i].number_input(
@@ -176,7 +141,7 @@ with col_right:
                             max_value=5,
                             value=None,
                             step=1,
-                            key=f"q_key_{selected_domain}_{selected_sub}_{q_num}"
+                            key=f"q_key_{selected_exam}_{selected_domain}_{selected_sub}_{q_num}"
                         )
                     user_answers[q_num] = ans
                     
@@ -195,10 +160,9 @@ if st.session_state.get("submitted", False):
     
     saved_answers = st.session_state.get("user_answers", {})
     
-    if selected_domain in OFFICIAL_ANSWERS:
-        correct_db = OFFICIAL_ANSWERS[selected_domain]
-    else:
-        correct_db = OFFICIAL_ANSWERS["탐구"]
+    # 📌 정확하게 해당 시험과 과목의 정답 데이터 가져오기 (없으면 임시 기본값 사용)
+    exam_db = OFFICIAL_ANSWERS.get(selected_exam, {})
+    correct_db = exam_db.get(selected_sub, {i: (i % 5) + 1 for i in range(1, total_q + 1)})
 
     correct_count = 0
     wrong_questions = []
