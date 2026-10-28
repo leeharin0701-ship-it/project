@@ -8,14 +8,14 @@ st.set_page_config(
 )
 
 st.title("📝 평가원 기출문제 OMR & 자동 채점 포털")
-st.caption("키보드 숫자로 답안을 입력하고 제출 시 정답과 비교하여 자동 채점해 줍니다.")
+st.caption("시험 및 과목별로 원본 문제지 링크를 각각 연결하여 바로 다운로드하고 채점하세요.")
 
 # ----------------------------------------------------
 # 1. 과목 및 시험 선택 구조
 # ----------------------------------------------------
 EXAM_STRUCTURE = {
-    "국어": ["화법과 작문", "언어와 매체"],
-    "수학": ["확률과 통계", "미적분", "기하"],
+    "국어": ["국어 영역"],
+    "수학": ["수학 영역"],
     "영어": ["공통 (듣기 포함)"],
     "한국사": ["필수 공통"],
     "사회탐구": [
@@ -28,20 +28,64 @@ EXAM_STRUCTURE = {
     ]
 }
 
-# EBSi 연도/시험별 직통 딥링크
-EBS_DIRECT_LINKS = {
-    "2026학년도 수능 기출": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=60defdef6d83db1b756f841089563c5a",
-    "2024학년도 9월 모의평가": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202309061",
-    "2024학년도 6월 모의평가": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202306011",
-    "2023학년도 수능 (2022.11)": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202211171",
-    "2023학년도 9월 모의평가": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202208311",
-    "2023학년도 6월 모의평가": "https://www.ebsi.co.kr/ebs/xip/xipa/retrievePblcPaperExamInfo.ax?examId=202206091"
-}
+# 시행 시험 목록
+EXAM_LIST = [
+    "2026학년도 수능",
+    "2026학년도 9월 모의평가",
+    "2026학년도 6월 모의평가",
+    "2025학년도 수능",
+    "2025학년도 9월 모의평가",
+    "2025학년도 6월 모의평가"
+]
 
 # ----------------------------------------------------
-# 2. 시험별 예시 정답 데이터베이스 (자동 채점용)
+# 2. [핵심] 시험 및 과목별 개별 링크 데이터베이스
 # ----------------------------------------------------
-# ※ 실제 모의고사 정답 샘플 데이터
+# 구조: { "시험 이름": { "과목명": "해당 과목 PDF 또는 다운로드 링크" } }
+# ※ 아래 링크는 예시이며, 원하시는 과목별 링크(PDF 주소 또는 EBSi/평가원 상세페이지)를 자유롭게 수정·입력하세요.
+EXAM_SUBJECT_LINKS = {
+    "2026학년도 수능": {
+        "국어 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=60defdef6d83db1b756f841089563c5a",
+        "수학 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=f9055b3484e9176cea7c74b9819a7d2c",
+        "영어 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=e0431cad0731556faee928fd38c81241",
+        "한국사": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=10b6d784275a07a82efa90ddcb8fbd22",
+        "사회 탐구": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=10b6d784275a07a82efa90ddcb8fbd22", #보류
+        "과학 탐구": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=10b6d784275a07a82efa90ddcb8fbd22",
+        # 필요한 과목들의 링크를 계속 추가할 수 있습니다.
+    },
+    "2025학년도 9월 수능": {
+         "국어 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=60defdef6d83db1b756f841089563c5a",
+        "수학 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=f9055b3484e9176cea7c74b9819a7d2c",
+        "영어 영역": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=e0431cad0731556faee928fd38c81241",
+        "한국사": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=10b6d784275a07a82efa90ddcb8fbd22",
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 기본 fallback 링크 (등록되지 않은 과목 선택 시 안내용)
+DEFAULT_LINK = "https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234&m=0403&s=suneung"
+
+# ----------------------------------------------------
+# 3. 시험별 예시 정답 데이터베이스 (자동 채점용)
+# ----------------------------------------------------
 OFFICIAL_ANSWERS = {
     "국어": {1: 1, 2: 4, 3: 2, 4: 5, 5: 3, 6: 1, 7: 3, 8: 4, 9: 2, 10: 5, 
              11: 3, 12: 1, 13: 4, 14: 2, 15: 5, 16: 2, 17: 3, 18: 1, 19: 4, 20: 5,
@@ -56,11 +100,11 @@ OFFICIAL_ANSWERS = {
 }
 
 # ----------------------------------------------------
-# 3. 사이드바
+# 4. 사이드바
 # ----------------------------------------------------
 with st.sidebar:
     st.header("🎯 기출문제 선택")
-    selected_exam = st.selectbox("시행 시험 선택", list(EBS_DIRECT_LINKS.keys()))
+    selected_exam = st.selectbox("시행 시험 선택", EXAM_LIST)
     selected_domain = st.selectbox("영역 선택", list(EXAM_STRUCTURE.keys()))
     selected_sub = st.selectbox("선택 과목", EXAM_STRUCTURE[selected_domain])
 
@@ -71,19 +115,21 @@ with st.sidebar:
         st.rerun()
 
 # ----------------------------------------------------
-# 4. 메인 화면
+# 5. 메인 화면
 # ----------------------------------------------------
 st.subheader(f"📌 {selected_exam} - [{selected_domain} : {selected_sub}]")
 
 col_left, col_right = st.columns([1, 1.2])
 
-# 왼쪽: 문제지 다운로드 링크
+# 왼쪽: 과목별 맞춤 문제지 다운로드 링크
 with col_left:
-    st.markdown("### 📥 기출 문제지 열기")
-    target_url = EBS_DIRECT_LINKS[selected_exam]
+    st.markdown(f"### 📥 [{selected_sub}] 문제지 열기")
+    
+    # 선택된 시험과 과목에 맞는 링크 가져오기 (없으면 기본 평가원 보관함 링크 제공)
+    target_url = EXAM_SUBJECT_LINKS.get(selected_exam, {}).get(selected_sub, DEFAULT_LINK)
     
     st.link_button(
-        f"📄 [{selected_sub}] EBSi 원본 문제지 열기",
+        f"📄 [{selected_sub}] 원본 문제지 / PDF 열기",
         target_url,
         type="primary",
         use_container_width=True
@@ -102,7 +148,6 @@ with col_right:
     
     total_q = 45 if selected_domain in ["국어", "영어"] else (30 if selected_domain == "수학" else 20)
 
-    # 제출 상태 세션 관리
     if "submitted" not in st.session_state:
         st.session_state["submitted"] = False
 
@@ -110,13 +155,11 @@ with col_right:
         user_answers = {}
         st.caption(f"총 {total_q}문항 | 숫자를 입력하고 Tab 키로 다음 번호로 이동하세요.")
         
-        # 5문제씩 가로 배치하여 깔끔한 OMR 느낌 제공
         for row in range(0, total_q, 5):
             cols = st.columns(5)
             for i in range(5):
                 q_num = row + i + 1
                 if q_num <= total_q:
-                    # 수학 주관식(22번~30번) 처리
                     if selected_domain == "수학" and q_num >= 22:
                         ans = cols[i].number_input(
                             f"{q_num}번 (주관식)",
@@ -126,7 +169,6 @@ with col_right:
                             step=1,
                             key=f"q_key_{selected_domain}_{selected_sub}_{q_num}"
                         )
-                    # 일반 객관식 (키보드로 1~5 입력)
                     else:
                         ans = cols[i].number_input(
                             f"{q_num}번 (1~5)",
@@ -145,7 +187,7 @@ with col_right:
         st.session_state["user_answers"] = user_answers
 
 # ----------------------------------------------------
-# 5. 자동 채점 결과 표시
+# 6. 자동 채점 결과 표시
 # ----------------------------------------------------
 if st.session_state.get("submitted", False):
     st.divider()
@@ -153,7 +195,6 @@ if st.session_state.get("submitted", False):
     
     saved_answers = st.session_state.get("user_answers", {})
     
-    # 정답 불러오기
     if selected_domain in OFFICIAL_ANSWERS:
         correct_db = OFFICIAL_ANSWERS[selected_domain]
     else:
@@ -173,7 +214,6 @@ if st.session_state.get("submitted", False):
 
     score = int((correct_count / total_q) * 100)
 
-    # 점수 요약 메트릭
     m1, m2, m3 = st.columns(3)
     m1.metric("총 문항 수", f"{total_q}문항")
     m2.metric("맞힌 문항 수", f"{correct_count}문항")
@@ -187,10 +227,8 @@ if st.session_state.get("submitted", False):
     else:
         st.warning(f"💪 틀린 {len(wrong_questions)}문제를 복습해 보세요.")
 
-    # 오답 문제 세부 목록
     if wrong_questions:
         with st.expander("❌ 오답 문제 목록 및 정답 확인", expanded=True):
             for q_num, user_a, real_a in wrong_questions:
                 u_str = f"{user_a}번" if user_a is not None else "미응답"
                 st.write(f"- **{q_num}번**: 내가 쓴 답 `[{u_str}]` / **정답 `[{real_a}번]`**")
-            
