@@ -17,8 +17,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📚 2022 개정 수능 전과목 심화 개념 단권화 노트")
-st.caption("2022 개정 교육과정 기준 전 과목 공식, 유형별 풀이 전략 및 단원별 세부 심화 개념 정리집입니다.")
+st.title("2022 개정 수능 전과목 개념 단권화 노트")
+st.caption("2022 개정 교육과정 기준 전 과목 공식, 단원별 세부 개념 정리집")
 
 # 사이드바 과목 선택
 subject = st.sidebar.selectbox(
