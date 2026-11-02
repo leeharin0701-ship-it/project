@@ -34,10 +34,10 @@ st.divider()
 if subject == "국어":
     st.header("📖 국어 영역 (화법과 언어 / 문학 / 독서와 작문)")
     
-    tab1, tab2, tab3 = st.tabs(["📚 문학", "📑 독서와 작문", "🗣️ 화법과 언어 (문법 완벽 총정리)"])
+    tab1, tab2, tab3 = st.tabs(["문학", "독서와 작문", "화법과 언어"])
     
     with tab1:
-        st.subheader("1. 문학 실전 독해 및 수사학")
+        st.subheader("1. 문학 (시, 소설)")
         with st.expander("📌 시", expanded=True):
             st.markdown("""
 
