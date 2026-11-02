@@ -157,9 +157,7 @@ if subject == "국어":
 
 
 
-with tab1:
-        st.subheader("1. 문학 (시, 소설)")
-        with st.expander("📌 시 개념", expanded=True):
+with st.expander("📌 소설 문학 서술 구조"):
             st.markdown("""아""")
 
 
